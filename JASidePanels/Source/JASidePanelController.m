@@ -570,7 +570,7 @@ static char ja_kvoContext;
     }
 }
 
-- (void)willPanToSidePanelVisiblePercent:(CGFloat)percent duration:(CGFloat)duration {}
+- (void)willPanToSidePanelVisiblePercent:(CGFloat)percent duration:(NSTimeInterval)duration {}
 
 #pragma mark - Tap Gesture
 

@@ -95,7 +95,7 @@ typedef enum _JASidePanelState {
 - (void)stylePanel:(UIView *)panel;
 
 // This method will be called whenever the sidepanel visible amount change. Subclass this method to react to changes of how much of the center panel / side panels are visible
-- (void)willPanToSidePanelVisiblePercent:(CGFloat)percent duration:(CGFloat)duration;
+- (void)willPanToSidePanelVisiblePercent:(CGFloat)percent duration:(NSTimeInterval)duration;
 
 #pragma mark - Animation
 
