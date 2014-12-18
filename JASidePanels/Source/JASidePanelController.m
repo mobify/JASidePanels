@@ -34,6 +34,7 @@ static char ja_kvoContext;
 }
 
 @property (nonatomic, readwrite) JASidePanelState state;
+@property (nonatomic) BOOL centerPanelAnchored;
 @property (nonatomic, weak) UIViewController *visiblePanel;
 @property (nonatomic, strong) UIView *tapView;
 
@@ -173,6 +174,7 @@ static char ja_kvoContext;
     [self.view addSubview:self.rightPanelContainer];
     
     self.state = JASidePanelCenterVisible;
+    self.centerPanelAnchored = YES;
     
     [self _swapCenter:nil previousState:0 with:_centerPanel];
     [self.view bringSubviewToFront:self.centerPanelContainer];
@@ -262,6 +264,13 @@ static char ja_kvoContext;
                 break;
 			}
         }
+    }
+}
+
+- (void)setCenterPanelAnchored:(BOOL)centerPanelAnchored {
+    if (_centerPanelAnchored != centerPanelAnchored) {
+        [self centerPanelAnchorStatusWillChange:centerPanelAnchored];
+        _centerPanelAnchored = centerPanelAnchored;
     }
 }
 
@@ -366,6 +375,7 @@ static char ja_kvoContext;
         // update the state immediately to prevent user interaction on the side panels while animating
         JASidePanelState previousState = self.state;
         self.state = JASidePanelCenterVisible;
+        self.centerPanelAnchored = YES;
         [UIView animateWithDuration:0.2f animations:^{
             if (self.bounceOnCenterPanelChange) {
                 // first move the centerPanel offscreen
@@ -517,10 +527,9 @@ static char ja_kvoContext;
             [self _layoutSideContainers:NO duration:0];
         }
         
-        if(sender.state == UIGestureRecognizerStateChanged) {
-            CGFloat fullyVisibleWidth = frame.origin.x > 0.0f ? self.leftVisibleWidth : -self.rightVisibleWidth;
-            [self willPanToSidePanelVisiblePercent:(frame.origin.x / fullyVisibleWidth) duration:0.0f];
-        } else if (sender.state == UIGestureRecognizerStateEnded) {
+        self.centerPanelAnchored = NO;
+        
+        if (sender.state == UIGestureRecognizerStateEnded) {
             CGFloat deltaX =  frame.origin.x - _locationBeforePan.x;			
             if ([self _validateThreshold:deltaX]) {
                 [self _completePan:deltaX];
@@ -570,7 +579,7 @@ static char ja_kvoContext;
     }
 }
 
-- (void)willPanToSidePanelVisiblePercent:(CGFloat)percent duration:(NSTimeInterval)duration {}
+- (void)centerPanelAnchorStatusWillChange:(BOOL)willAnchor {}
 
 #pragma mark - Tap Gesture
 
@@ -745,8 +754,6 @@ static char ja_kvoContext;
     }
     
     CGFloat duration = [self _calculatedDuration];
-    CGFloat sidePanelVisiblePercent = _centerPanelRestingFrame.origin.x == 0.0f ? 0.0f : 1.0f;
-    [self willPanToSidePanelVisiblePercent:sidePanelVisiblePercent duration:duration];
     [UIView animateWithDuration:duration delay:0.0f options:UIViewAnimationOptionCurveLinear|UIViewAnimationOptionLayoutSubviews animations:^{
         self.centerPanelContainer.frame = _centerPanelRestingFrame;
         [self styleContainer:self.centerPanelContainer animate:YES duration:duration];
@@ -831,6 +838,7 @@ static char ja_kvoContext;
 
 - (void)_showLeftPanel:(BOOL)animated bounce:(BOOL)shouldBounce {
     self.state = JASidePanelLeftVisible;
+    self.centerPanelAnchored = NO;
     [self _loadLeftPanel];
     
     [self _adjustCenterFrame];
@@ -838,8 +846,7 @@ static char ja_kvoContext;
     if (animated) {
         [self _animateCenterPanel:shouldBounce completion:nil];
     } else {
-        [self willPanToSidePanelVisiblePercent:1.0f duration:0.0f];
-        self.centerPanelContainer.frame = _centerPanelRestingFrame;	
+        self.centerPanelContainer.frame = _centerPanelRestingFrame;
         [self styleContainer:self.centerPanelContainer animate:NO duration:0.0f];
         if (self.style == JASidePanelMultipleActive || self.pushesSidePanels) {
             [self _layoutSideContainers:NO duration:0.0f];
@@ -854,6 +861,7 @@ static char ja_kvoContext;
 
 - (void)_showRightPanel:(BOOL)animated bounce:(BOOL)shouldBounce {
     self.state = JASidePanelRightVisible;
+    self.centerPanelAnchored = NO;
     [self _loadRightPanel];
     
     [self _adjustCenterFrame];
@@ -861,8 +869,7 @@ static char ja_kvoContext;
     if (animated) {
         [self _animateCenterPanel:shouldBounce completion:nil];
     } else {
-        [self willPanToSidePanelVisiblePercent:1.0f duration:0.0f];
-        self.centerPanelContainer.frame = _centerPanelRestingFrame;	
+        self.centerPanelContainer.frame = _centerPanelRestingFrame;
         [self styleContainer:self.centerPanelContainer animate:NO duration:0.0f];
         if (self.style == JASidePanelMultipleActive || self.pushesSidePanels) {
             [self _layoutSideContainers:NO duration:0.0f];
@@ -877,7 +884,7 @@ static char ja_kvoContext;
 
 - (void)_showCenterPanel:(BOOL)animated bounce:(BOOL)shouldBounce {
     self.state = JASidePanelCenterVisible;
-    
+
     [self _adjustCenterFrame];
     
     if (animated) {
@@ -885,10 +892,10 @@ static char ja_kvoContext;
             self.leftPanelContainer.hidden = YES;
             self.rightPanelContainer.hidden = YES;
             [self _unloadPanels];
+            self.centerPanelAnchored = YES;
         }];
     } else {
-        [self willPanToSidePanelVisiblePercent:0.0f duration:0.0f];
-        self.centerPanelContainer.frame = _centerPanelRestingFrame;	
+        self.centerPanelContainer.frame = _centerPanelRestingFrame;
         [self styleContainer:self.centerPanelContainer animate:NO duration:0.0f];
         if (self.style == JASidePanelMultipleActive || self.pushesSidePanels) {
             [self _layoutSideContainers:NO duration:0.0f];
@@ -896,6 +903,7 @@ static char ja_kvoContext;
         self.leftPanelContainer.hidden = YES;
         self.rightPanelContainer.hidden = YES;
         [self _unloadPanels];
+        self.centerPanelAnchored = YES;
     }
     
     self.tapView = nil;
