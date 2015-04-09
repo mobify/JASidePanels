@@ -24,8 +24,14 @@
  */
 
 #import "JACenterViewController.h"
+#import "JASidePanelController.h"
+
+#import "UIViewController+JASidePanel.h"
 
 @interface JACenterViewController ()
+
+@property (strong, nonatomic) UIButton *showLeftPanelWithCompletionButton;
+@property (strong, nonatomic) UILabel  *animationDoneLabel;
 
 @end
 
@@ -45,6 +51,47 @@
     CGFloat green = (CGFloat)arc4random() / 0x100000000;
     CGFloat blue = (CGFloat)arc4random() / 0x100000000;
     self.view.backgroundColor = [UIColor colorWithRed:red green:green blue:blue alpha:1.0f];
+    
+    self.showLeftPanelWithCompletionButton = [[UIButton alloc] initWithFrame:CGRectZero];
+    [self.showLeftPanelWithCompletionButton setTitle:@"Show Left Panel (Completion)" forState:UIControlStateNormal];
+    [self.showLeftPanelWithCompletionButton sizeToFit];
+    self.showLeftPanelWithCompletionButton.autoresizingMask = UIViewAutoresizingFlexibleRightMargin
+                                                            | UIViewAutoresizingFlexibleLeftMargin
+                                                            | UIViewAutoresizingFlexibleBottomMargin;
+
+    CGRect frame = CGRectMake(20.0, 70.0,
+                              CGRectGetWidth(self.view.frame) - 40.0,
+                              self.showLeftPanelWithCompletionButton.frame.size.height);
+    self.showLeftPanelWithCompletionButton.frame = frame;
+    
+    [self.showLeftPanelWithCompletionButton addTarget:self
+                                               action:@selector(_showLeftTapped:)
+                                     forControlEvents:UIControlEventTouchUpInside];
+    
+    [self.view addSubview:self.showLeftPanelWithCompletionButton];
+    
+    self.animationDoneLabel = [[UILabel alloc] initWithFrame:CGRectZero];
+    self.animationDoneLabel.text = @"Done!";
+    self.animationDoneLabel.autoresizingMask = UIViewAutoresizingFlexibleRightMargin
+                                             | UIViewAutoresizingFlexibleLeftMargin
+                                             | UIViewAutoresizingFlexibleTopMargin;
+    self.animationDoneLabel.alpha = 0.0;
+    [self.animationDoneLabel sizeToFit];
+    self.animationDoneLabel.frame = CGRectMake(20.0,
+                                               CGRectGetHeight(self.view.bounds) - CGRectGetHeight(self.animationDoneLabel.frame) - 40.0,
+                                               CGRectGetWidth(self.view.frame) - 40.0,
+                                               self.animationDoneLabel.frame.size.height);
+    [self.view addSubview:self.animationDoneLabel];
+}
+
+- (void)_showLeftTapped:(UIButton *)button {
+    [self.sidePanelController showLeftPanelAnimated:YES completion:^(BOOL finished) {
+        UIAlertController *alert = [UIAlertController alertControllerWithTitle:@"Show Left Panel"
+                                                                       message:@"Animation completed!"
+                                                                preferredStyle:UIAlertControllerStyleAlert];
+        [alert addAction:[UIAlertAction actionWithTitle:@"OK" style:UIAlertActionStyleDefault handler:nil]];
+        [self presentViewController:alert animated:YES completion:nil];
+    }];
 }
 
 @end

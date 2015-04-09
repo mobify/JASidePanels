@@ -36,6 +36,8 @@ typedef enum _JASidePanelState {
     JASidePanelRightVisible
 } JASidePanelState;
 
+typedef void (^AnimationCompletionBlock)(BOOL finished);
+
 @interface JASidePanelController : UIViewController<UIGestureRecognizerDelegate>
 
 #pragma mark - Usage
@@ -54,6 +56,10 @@ typedef enum _JASidePanelState {
 - (void)showLeftPanelAnimated:(BOOL)animated;
 - (void)showRightPanelAnimated:(BOOL)animated;
 - (void)showCenterPanelAnimated:(BOOL)animated;
+
+- (void)showLeftPanelAnimated:(BOOL)animated completion:(AnimationCompletionBlock)completion;
+- (void)showRightPanelAnimated:(BOOL)animated completion:(AnimationCompletionBlock)completion;
+- (void)showCenterPanelAnimated:(BOOL)animated completion:(AnimationCompletionBlock)completion;
 
 // toggle them opened/closed
 - (void)toggleLeftPanel:(id)sender;
